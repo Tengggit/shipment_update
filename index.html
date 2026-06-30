@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新竹貨運貨態自動查詢系統 — 作業流程報告</title>
+<style>
+  :root{
+    --blue:#1a73e8; --blue-d:#1761c4; --ink:#1f2733; --muted:#5b6675;
+    --line:#e4e8ee; --bg:#f5f7fa; --green:#1a7f37; --amber:#b08800; --red:#c0392b;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Microsoft JhengHei","Segoe UI",system-ui,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.7;}
+  .page{max-width:960px;margin:0 auto;padding:0 20px 80px;}
+  header.hero{background:linear-gradient(135deg,#1a73e8,#0c47a1);color:#fff;
+       padding:38px 20px 30px;margin-bottom:8px;}
+  header.hero .inner{max-width:960px;margin:0 auto;}
+  header.hero h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px;}
+  header.hero .meta{font-size:13px;opacity:.92;}
+  header.hero .meta span{margin-right:18px;display:inline-block;}
+  .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+       padding:3px 10px;border-radius:20px;font-size:12px;margin-top:10px;}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:12px;border-left:5px solid var(--blue);}
+  h3{font-size:15px;margin:18px 0 8px;color:var(--blue-d);}
+  p{margin:8px 0;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+       padding:18px 20px;margin:12px 0;box-shadow:0 1px 3px rgba(20,40,80,.04);}
+  .muted{color:var(--muted);font-size:13.5px;}
+  code{background:#eef1f5;border-radius:5px;padding:1px 6px;font-family:Consolas,monospace;font-size:13px;}
+  ul,ol{margin:8px 0 8px 4px;padding-left:22px;}
+  li{margin:5px 0;}
+
+  /* 流程圖 */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:14px 0;}
+  .node{flex:1 1 120px;min-width:120px;background:#eef4ff;border:1px solid #c9ddff;
+       border-radius:10px;padding:12px 10px;text-align:center;font-size:13px;position:relative;}
+  .node b{display:block;font-size:13.5px;margin-bottom:2px;color:#0c47a1;}
+  .arrow{display:flex;align-items:center;color:#9bb8df;font-size:22px;font-weight:bold;}
+  .pipe{counter-reset:step;}
+  .pipe .step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line);}
+  .pipe .step:last-child{border-bottom:none;}
+  .pipe .step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;
+       display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+  .pipe .step .t b{color:#0c47a1;}
+
+  /* 統計卡 */
+  .stats{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;}
+  .stat{flex:1 1 120px;background:#fff;border:1px solid var(--line);border-radius:12px;
+       padding:14px;text-align:center;}
+  .stat .v{font-size:30px;font-weight:800;line-height:1.1;}
+  .stat .l{font-size:13px;color:var(--muted);margin-top:4px;}
+  .s-total .v{color:var(--blue);} .s-ok .v{color:var(--green);}
+  .s-no .v{color:var(--amber);} .s-fail .v{color:var(--red);}
+
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;}
+  th{background:#eef2f7;font-weight:700;}
+  tr:nth-child(even) td{background:#fafbfd;}
+  .ok{color:var(--green);font-weight:700;} .warn{color:var(--amber);font-weight:700;}
+
+  .note{border-left:4px solid var(--amber);background:#fff8e6;padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;}
+  .good{border-left:4px solid var(--green);background:#eefaf0;padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;}
+  .files{font-size:14px;}
+  .files td:first-child{font-family:Consolas,monospace;white-space:nowrap;color:#0c47a1;}
+  footer{margin-top:40px;text-align:center;color:var(--muted);font-size:12.5px;
+       border-top:1px solid var(--line);padding-top:16px;}
+  .toc{font-size:13.5px;columns:2;}
+  .toc a{color:var(--blue-d);text-decoration:none;}
+  @media print{
+    body{background:#fff;} header.hero{background:#0c47a1 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .card,.stat,.node{box-shadow:none;} h2{break-after:avoid;} .step,.stat{break-inside:avoid;}
+    .no-print{display:none;}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="inner">
+    <h1>🚚 新竹貨運貨態自動查詢與回填系統</h1>
+    <div class="meta">
+      <span>📄 作業流程報告</span>
+      <span>📅 製作日期：2026-06-30</span>
+      <span>📁 專案路徑：F:\Ten</span>
+    </div>
+    <span class="badge">狀態：已完成並實測通過 ✓</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <div class="card no-print">
+    <strong>目錄</strong>
+    <div class="toc">
+      <a href="#s1">一、需求說明</a><br>
+      <a href="#s2">二、系統架構</a><br>
+      <a href="#s3">三、技術調查與關鍵發現</a><br>
+      <a href="#s4">四、作業流程（查詢管線）</a><br>
+      <a href="#s5">五、查詢／略過規則</a><br>
+      <a href="#s6">六、實測結果</a><br>
+      <a href="#s7">七、檔案結構</a><br>
+      <a href="#s8">八、操作方式</a><br>
+      <a href="#s9">九、注意事項與後續</a>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <h2 id="s1">一、需求說明</h2>
+  <div class="card">
+    <p>在 Google 試算表中記錄新竹貨運的「大包單號」與「貨態」，原本須<strong>人工逐筆</strong>到新竹官網輸入單號與驗證碼查詢、再手動回填，耗時且易漏。</p>
+    <p><b>目標：</b>建立一個由<strong>使用者按一個按鈕</strong>即自動完成的系統：</p>
+    <ol>
+      <li>讀取試算表，挑出<strong>需要查詢</strong>的單號（B 欄）</li>
+      <li>自動到新竹官網查詢（<strong>驗證碼以 OCR 自動辨識</strong>）</li>
+      <li>解析<strong>最新「作業時間 + 貨物狀態」</strong></li>
+      <li>自動<strong>回填到試算表 C 欄</strong></li>
+    </ol>
+    <p class="muted">資料表欄位：A＝日期、B＝大包單號、C＝大包單號貨態。</p>
+  </div>
+
+  <!-- 2 -->
+  <h2 id="s2">二、系統架構</h2>
+  <div class="card">
+    <div class="flow">
+      <div class="node"><b>瀏覽器</b>HTML 按鈕頁<br><span class="muted">即時進度顯示</span></div>
+      <div class="arrow">⇄</div>
+      <div class="node"><b>本機後端</b>Python / Flask<br><span class="muted">查詢 + OCR + 解析</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>新竹官網</b>貨況查詢<br><span class="muted">SearchGoods</span></div>
+    </div>
+    <div class="flow">
+      <div class="node" style="flex:2">本機後端查得結果後</div>
+      <div class="arrow">→</div>
+      <div class="node"><b>Apps Script</b>Webhook</div>
+      <div class="arrow">→</div>
+      <div class="node"><b>Google 試算表</b>寫回 C 欄</div>
+    </div>
+    <h3>為什麼是這個架構？</h3>
+    <ul>
+      <li><b>不能用純前端 / GitHub Pages：</b>瀏覽器有 <code>CORS</code> 限制無法直接連新竹官網；驗證碼 OCR 與 Session 處理都必須在後端執行。</li>
+      <li><b>讀取試算表：</b>用公開 CSV 匯出，免授權。</li>
+      <li><b>寫回試算表：</b>程式自動寫入須授權，採用設定最少的 <b>Apps Script Webhook</b>（免 Google Cloud 專案、免金鑰檔）。</li>
+    </ul>
+  </div>
+
+  <!-- 3 -->
+  <h2 id="s3">三、技術調查與關鍵發現</h2>
+  <div class="card">
+    <ul>
+      <li>新竹查詢頁為 ASP.NET 表單，需帶 <code>__VIEWSTATE</code> 與 Session Cookie；<b>一組 4 碼純數字圖形驗證碼</b>。</li>
+      <li>查詢成功後會回傳一個<b>自動送出的加密中轉表單</b>（<code>no</code>/<code>chk</code>），再導向真正的貨況結果頁。</li>
+      <li>結果頁為表格結構，<b>最新一筆在最上</b>：作業時間 + 貨物狀態 + 負責營業所，組合為例如 <code>2026/05/05 10:37 順利送達（三民）</code>。</li>
+      <li>查無資料時頁面顯示紅字「請檢查您的查貨資料」→ 記為「查無資料」。</li>
+      <li><b>驗證碼正確性由新竹伺服器把關</b>：OCR 猜錯只會被退回、換一張重試 → <b>OCR 準確率只影響速度、不影響對錯</b>。</li>
+      <li>多筆同時查詢會觸發官網錯誤頁 → 改採<b>一次一筆</b>，穩定可靠。</li>
+      <li>OCR 採用 <code>ddddocr</code>（專為驗證碼設計），實測幾乎一次命中。</li>
+    </ul>
+    <div class="note"><b>重要：</b>「知道連結可編輯」只適用於人在瀏覽器手動編輯；程式自動寫入仍需 Webhook 授權，這是設定最少的做法。</div>
+  </div>
+
+  <!-- 4 -->
+  <h2 id="s4">四、作業流程（查詢管線）</h2>
+  <div class="card pipe">
+    <div class="step"><div class="n">1</div><div class="t"><b>讀取試算表</b>　以公開 CSV 取得全部 A/B/C 欄資料。</div></div>
+    <div class="step"><div class="n">2</div><div class="t"><b>篩選待查清單</b>　依規則挑出需查詢的大包單號（見第五節）。</div></div>
+    <div class="step"><div class="n">3</div><div class="t"><b>取得頁面</b>　GET 查詢頁，擷取 <code>__VIEWSTATE</code> 與 Session。</div></div>
+    <div class="step"><div class="n">4</div><div class="t"><b>抓驗證碼 → OCR 辨識</b>　ddddocr 辨識 4 碼數字；不合格即換圖。</div></div>
+    <div class="step"><div class="n">5</div><div class="t"><b>送出查詢</b>　帶單號 + 驗證碼 POST；若「驗證碼錯誤」→ 換一張重試。</div></div>
+    <div class="step"><div class="n">6</div><div class="t"><b>跟隨加密表單 → 解析貨況</b>　取得結果頁，抓最新「時間 + 狀態（營業所）」。</div></div>
+    <div class="step"><div class="n">7</div><div class="t"><b>Webhook 回填</b>　依<b>大包單號比對</b>找到對應列，寫入 C 欄。</div></div>
+    <div class="step"><div class="n">8</div><div class="t"><b>即時回報 + 統計</b>　每筆結果即時顯示於網頁，結束輸出總結。</div></div>
+  </div>
+
+  <!-- 5 -->
+  <h2 id="s5">五、查詢／略過規則</h2>
+  <div class="card">
+    <p>對每一列，當 <b>B 欄為 10 碼數字單號</b>，且符合下列任一條件即<b>納入查詢</b>：</p>
+    <ol>
+      <li>C 欄為<b>空白</b>，或</li>
+      <li>C 欄<b>不包含</b>任何「已送達關鍵字」。</li>
+    </ol>
+    <p>已送達關鍵字（可於 <code>config.json</code> 調整）：<code>順利送達</code>、<code>ARRIVED</code>（英文不分大小寫）。</p>
+    <p class="muted">→ C 欄已含上述關鍵字的列會被<b>略過不查</b>，避免重複查詢已完成的件。</p>
+  </div>
+
+  <!-- 6 -->
+  <h2 id="s6">六、實測結果</h2>
+  <div class="card">
+    <div class="stats">
+      <div class="stat s-total"><div class="v">13</div><div class="l">待查筆數</div></div>
+      <div class="stat s-ok"><div class="v">12</div><div class="l">查到並寫回</div></div>
+      <div class="stat s-no"><div class="v">1</div><div class="l">查無資料</div></div>
+      <div class="stat s-fail"><div class="v">0</div><div class="l">失敗</div></div>
+    </div>
+    <div class="good">查詢 → Webhook → 回填 C 欄 全鏈路實測通過；12 筆已抽查確認寫入正確列。</div>
+    <table>
+      <thead><tr><th>#</th><th>大包單號</th><th>查詢結果（回填 C 欄）</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>1113801861</td><td class="warn">查無資料（疑單號需確認）</td></tr>
+        <tr><td>2</td><td>1113801780</td><td class="ok">2026/06/24 15:44 順利送達（三民）</td></tr>
+        <tr><td>3</td><td>1113250725</td><td class="ok">2026/05/28 15:18 順利送達（高雄）</td></tr>
+        <tr><td>4</td><td>1113250051</td><td class="ok">2026/05/28 15:18 順利送達（高雄）</td></tr>
+        <tr><td>5</td><td>1112807474</td><td class="ok">2026/05/08 10:06 順利送達（三民）</td></tr>
+        <tr><td>6</td><td>1112938175</td><td class="ok">2026/05/15 10:09 順利送達（三民）</td></tr>
+        <tr><td>7</td><td>1112937324</td><td class="ok">2026/05/15 10:09 順利送達（三民）</td></tr>
+        <tr><td>8</td><td>1112876026</td><td class="ok">2026/05/13 10:08 順利送達（三民）</td></tr>
+        <tr><td>9</td><td>1112836465</td><td class="ok">2026/05/11 10:06 順利送達（三民）</td></tr>
+        <tr><td>10</td><td>1112807441</td><td class="ok">2026/05/08 10:06 順利送達（三民）</td></tr>
+        <tr><td>11</td><td>1112807474</td><td class="ok">2026/05/08 10:06 順利送達（三民）</td></tr>
+        <tr><td>12</td><td>1112288682</td><td class="ok">2026/04/15 10:39 順利送達（三民）</td></tr>
+        <tr><td>13</td><td>1112288715</td><td class="ok">2026/04/15 10:37 順利送達（三民）</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">備註：<code>1113801861</code> 在新竹官網查無資料，且 Webhook 於 B 欄比對不到該值（回 0 列），建議人工確認該單號是否正確。</p>
+  </div>
+
+  <!-- 7 -->
+  <h2 id="s7">七、檔案結構（F:\Ten）</h2>
+  <div class="card">
+    <table class="files">
+      <tbody>
+        <tr><td>啟動查詢.bat</td><td>啟動程式（雙擊即用，自動開瀏覽器）</td></tr>
+        <tr><td>app.py</td><td>Flask 後端 + 按鈕流程協調 + 即時進度（SSE）</td></tr>
+        <tr><td>hct_client.py</td><td>新竹查詢：Session / 抓驗證碼 / OCR / 解析貨況</td></tr>
+        <tr><td>sheet_client.py</td><td>讀取 CSV、篩選規則、Webhook 回填</td></tr>
+        <tr><td>templates/index.html</td><td>按鈕與即時進度的網頁介面</td></tr>
+        <tr><td>config.json</td><td>設定（試算表網址、Webhook、密鑰、模式、關鍵字）</td></tr>
+        <tr><td>WebApp.gs</td><td>貼到試算表 Apps Script 的回填程式</td></tr>
+        <tr><td>requirements.txt</td><td>套件清單（flask、requests、ddddocr）</td></tr>
+        <tr><td>README_安裝與設定.md</td><td>完整安裝/設定/使用說明</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 8 -->
+  <h2 id="s8">八、操作方式</h2>
+  <div class="card">
+    <ol>
+      <li><b>雙擊 <code>啟動查詢.bat</code></b> → 自動開啟瀏覽器至 <code>http://127.0.0.1:5000</code></li>
+      <li>按下「<b>開始查詢並更新</b>」按鈕</li>
+      <li>畫面即時顯示每筆查詢與回填狀態，完成後顯示總結</li>
+    </ol>
+    <h3>模式切換（config.json）</h3>
+    <ul>
+      <li><code>dry_run: true</code>　＝ 只查詢、不寫回（試跑、安全）</li>
+      <li><code>dry_run: false</code>　＝ 查詢並自動寫回 C 欄（正式，目前設定）</li>
+    </ul>
+  </div>
+  <footer>
+    新竹貨運貨態自動查詢與回填系統 ・ 作業流程報告 ・ 2026-06-30<br>
+    本報告由本機程式之開發與實測過程整理而成。
+  </footer>
+</div>
+</body>
+</html>
