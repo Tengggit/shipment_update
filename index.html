@@ -120,7 +120,7 @@
   <h2 id="s2">二、系統架構與作業流程</h2>
   <div class="card">
     <p>本系統採「<b>本機程式 + 瀏覽器介面</b>」設計。使用者在瀏覽器按下按鈕後，由本機 <b>Python（Flask）後端</b>統籌整個流程——先以公開 CSV 讀取 Google 試算表挑出待查單號，逐筆連線新竹官網查詢貨態（圖形驗證碼交由 <b>OCR</b> 自動辨識），解析出最新狀態後，再透過 <b>Apps Script Webhook</b> 寫回試算表 C 欄。</p>
-    <p class="muted">其中「讀取」用公開連結、免授權；「自動寫回」則由 <b>Apps Script Webhook</b> 負責——它是部署在該 Google 試算表上的一段小程式，對外提供一個網址，讓本機程式以密鑰安全呼叫，並依「大包單號」比對到正確的列後寫入，因此免去 Google Cloud 金鑰等繁複設定。</p>
+    <p class="muted">其中「讀取」用公開連結、免授權；「自動寫回」則由 <b>Apps Script Webhook</b> 負責——它是部署在該 Google 試算表上的一段小程式，對外提供一個網址，讓本機程式以密鑰安全呼叫，並依「大包單號」比對到正確的列後寫入。</p>
 
     <div class="vflow">
       <div class="vbox"><b>① 使用者啟動</b><span class="s">在瀏覽器頁面按下「開始查詢並更新」按鈕</span></div>
