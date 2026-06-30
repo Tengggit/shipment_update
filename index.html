@@ -32,18 +32,17 @@
   ul,ol{margin:8px 0 8px 4px;padding-left:22px;}
   li{margin:5px 0;}
 
-  /* 流程圖 */
-  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:14px 0;}
-  .node{flex:1 1 120px;min-width:120px;background:#eef4ff;border:1px solid #c9ddff;
-       border-radius:10px;padding:12px 10px;text-align:center;font-size:13px;position:relative;}
-  .node b{display:block;font-size:13.5px;margin-bottom:2px;color:#0c47a1;}
-  .arrow{display:flex;align-items:center;color:#9bb8df;font-size:22px;font-weight:bold;}
-  .pipe{counter-reset:step;}
-  .pipe .step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--line);}
-  .pipe .step:last-child{border-bottom:none;}
-  .pipe .step .n{flex:0 0 30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;
-       display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
-  .pipe .step .t b{color:#0c47a1;}
+  /* 流程圖（垂直連貫） */
+  .vflow{max-width:680px;margin:16px auto 4px;}
+  .vbox{border:1px solid #c9ddff;background:#eef4ff;border-radius:10px;padding:11px 16px;}
+  .vbox b{color:#0c47a1;font-size:14px;}
+  .vbox .s{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.5;}
+  .vbox.hub{background:#dbe9ff;border-color:#9bc0ff;}
+  .vbox.sheet{background:#eefaf0;border-color:#bfe6c8;}
+  .vbox.sheet b{color:#1a7f37;}
+  .vbox.hct{background:#fff3e6;border-color:#ffd9b0;}
+  .vbox.hct b{color:#b35c00;}
+  .vdown{text-align:center;color:#9bb8df;font-size:18px;line-height:1;margin:5px 0;}
 
   /* 統計卡 */
   .stats{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;}
@@ -70,7 +69,7 @@
   .toc a{color:var(--blue-d);text-decoration:none;}
   @media print{
     body{background:#fff;} header.hero{background:#0c47a1 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    .card,.stat,.node{box-shadow:none;} h2{break-after:avoid;} .step,.stat{break-inside:avoid;}
+    .card,.stat,.vbox{box-shadow:none;} h2{break-after:avoid;} .vbox,.stat{break-inside:avoid;}
     .no-print{display:none;}
   }
 </style>
@@ -94,14 +93,12 @@
     <strong>目錄</strong>
     <div class="toc">
       <a href="#s1">一、需求說明</a><br>
-      <a href="#s2">二、系統架構</a><br>
+      <a href="#s2">二、系統架構與作業流程</a><br>
       <a href="#s3">三、技術調查與關鍵發現</a><br>
-      <a href="#s4">四、作業流程（查詢管線）</a><br>
-      <a href="#s5">五、查詢／略過規則</a><br>
-      <a href="#s6">六、實測結果</a><br>
-      <a href="#s7">七、檔案結構</a><br>
-      <a href="#s8">八、操作方式</a><br>
-      <a href="#s9">九、注意事項與後續</a>
+      <a href="#s4">四、查詢／略過規則</a><br>
+      <a href="#s5">五、實測結果</a><br>
+      <a href="#s6">六、檔案結構</a><br>
+      <a href="#s7">七、操作方式</a>
     </div>
   </div>
 
@@ -120,28 +117,26 @@
   </div>
 
   <!-- 2 -->
-  <h2 id="s2">二、系統架構</h2>
+  <h2 id="s2">二、系統架構與作業流程</h2>
   <div class="card">
-    <div class="flow">
-      <div class="node"><b>瀏覽器</b>HTML 按鈕頁<br><span class="muted">即時進度顯示</span></div>
-      <div class="arrow">⇄</div>
-      <div class="node"><b>本機後端</b>Python / Flask<br><span class="muted">查詢 + OCR + 解析</span></div>
-      <div class="arrow">→</div>
-      <div class="node"><b>新竹官網</b>貨況查詢<br><span class="muted">SearchGoods</span></div>
+    <p>本系統採「<b>本機程式 + 瀏覽器介面</b>」設計。使用者在瀏覽器按下按鈕後，由本機 <b>Python（Flask）後端</b>統籌整個流程——先以公開 CSV 讀取 Google 試算表挑出待查單號，逐筆連線新竹官網查詢貨態（圖形驗證碼交由 <b>OCR</b> 自動辨識），解析出最新狀態後，再透過 <b>Apps Script Webhook</b> 寫回試算表 C 欄。</p>
+    <p class="muted">其中「讀取」用公開連結、免授權；「自動寫回」則由 <b>Apps Script Webhook</b> 負責——它是部署在該 Google 試算表上的一段小程式，對外提供一個網址，讓本機程式以密鑰安全呼叫，並依「大包單號」比對到正確的列後寫入，因此免去 Google Cloud 金鑰等繁複設定。</p>
+
+    <div class="vflow">
+      <div class="vbox"><b>① 使用者啟動</b><span class="s">在瀏覽器頁面按下「開始查詢並更新」按鈕</span></div>
+      <div class="vdown">↓</div>
+      <div class="vbox hub"><b>② 本機後端（Python / Flask）接手</b><span class="s">統籌整體流程，並負責驗證碼 OCR 與結果解析</span></div>
+      <div class="vdown">↓</div>
+      <div class="vbox sheet"><b>③ 讀取 Google 試算表（公開 CSV）</b><span class="s">取得 A／B／C 欄，篩選出「C 欄空白或未送達」的大包單號</span></div>
+      <div class="vdown">↓</div>
+      <div class="vbox hct"><b>④ 查詢新竹官網（逐筆）</b><span class="s">取頁面 → 抓 4 碼驗證碼 → OCR 辨識（猜錯自動換圖重試）→ 送出查詢</span></div>
+      <div class="vdown">↓</div>
+      <div class="vbox hct"><b>⑤ 解析貨況</b><span class="s">跟隨加密中轉表單，取出最新「作業時間 + 貨物狀態（營業所）」</span></div>
+      <div class="vdown">↓</div>
+      <div class="vbox"><b>⑥ Apps Script Webhook 回填</b><span class="s">以密鑰呼叫部署於試算表的接口，依大包單號比對列、寫入 C 欄</span></div>
+      <div class="vdown">↓</div>
+      <div class="vbox sheet"><b>⑦ 完成並回報</b><span class="s">每筆結果即時顯示於網頁，結束後輸出統計（查到／查無／失敗）</span></div>
     </div>
-    <div class="flow">
-      <div class="node" style="flex:2">本機後端查得結果後</div>
-      <div class="arrow">→</div>
-      <div class="node"><b>Apps Script</b>Webhook</div>
-      <div class="arrow">→</div>
-      <div class="node"><b>Google 試算表</b>寫回 C 欄</div>
-    </div>
-    <h3>為什麼是這個架構？</h3>
-    <ul>
-      <li><b>不能用純前端 / GitHub Pages：</b>瀏覽器有 <code>CORS</code> 限制無法直接連新竹官網；驗證碼 OCR 與 Session 處理都必須在後端執行。</li>
-      <li><b>讀取試算表：</b>用公開 CSV 匯出，免授權。</li>
-      <li><b>寫回試算表：</b>程式自動寫入須授權，採用設定最少的 <b>Apps Script Webhook</b>（免 Google Cloud 專案、免金鑰檔）。</li>
-    </ul>
   </div>
 
   <!-- 3 -->
@@ -156,24 +151,10 @@
       <li>多筆同時查詢會觸發官網錯誤頁 → 改採<b>一次一筆</b>，穩定可靠。</li>
       <li>OCR 採用 <code>ddddocr</code>（專為驗證碼設計），實測幾乎一次命中。</li>
     </ul>
-    <div class="note"><b>重要：</b>「知道連結可編輯」只適用於人在瀏覽器手動編輯；程式自動寫入仍需 Webhook 授權，這是設定最少的做法。</div>
   </div>
 
   <!-- 4 -->
-  <h2 id="s4">四、作業流程（查詢管線）</h2>
-  <div class="card pipe">
-    <div class="step"><div class="n">1</div><div class="t"><b>讀取試算表</b>　以公開 CSV 取得全部 A/B/C 欄資料。</div></div>
-    <div class="step"><div class="n">2</div><div class="t"><b>篩選待查清單</b>　依規則挑出需查詢的大包單號（見第五節）。</div></div>
-    <div class="step"><div class="n">3</div><div class="t"><b>取得頁面</b>　GET 查詢頁，擷取 <code>__VIEWSTATE</code> 與 Session。</div></div>
-    <div class="step"><div class="n">4</div><div class="t"><b>抓驗證碼 → OCR 辨識</b>　ddddocr 辨識 4 碼數字；不合格即換圖。</div></div>
-    <div class="step"><div class="n">5</div><div class="t"><b>送出查詢</b>　帶單號 + 驗證碼 POST；若「驗證碼錯誤」→ 換一張重試。</div></div>
-    <div class="step"><div class="n">6</div><div class="t"><b>跟隨加密表單 → 解析貨況</b>　取得結果頁，抓最新「時間 + 狀態（營業所）」。</div></div>
-    <div class="step"><div class="n">7</div><div class="t"><b>Webhook 回填</b>　依<b>大包單號比對</b>找到對應列，寫入 C 欄。</div></div>
-    <div class="step"><div class="n">8</div><div class="t"><b>即時回報 + 統計</b>　每筆結果即時顯示於網頁，結束輸出總結。</div></div>
-  </div>
-
-  <!-- 5 -->
-  <h2 id="s5">五、查詢／略過規則</h2>
+  <h2 id="s4">四、查詢／略過規則</h2>
   <div class="card">
     <p>對每一列，當 <b>B 欄為 10 碼數字單號</b>，且符合下列任一條件即<b>納入查詢</b>：</p>
     <ol>
@@ -184,8 +165,8 @@
     <p class="muted">→ C 欄已含上述關鍵字的列會被<b>略過不查</b>，避免重複查詢已完成的件。</p>
   </div>
 
-  <!-- 6 -->
-  <h2 id="s6">六、實測結果</h2>
+  <!-- 5 -->
+  <h2 id="s5">五、實測結果</h2>
   <div class="card">
     <div class="stats">
       <div class="stat s-total"><div class="v">13</div><div class="l">待查筆數</div></div>
@@ -215,8 +196,8 @@
     <p class="muted">備註：<code>1113801861</code> 在新竹官網查無資料，且 Webhook 於 B 欄比對不到該值（回 0 列），建議人工確認該單號是否正確。</p>
   </div>
 
-  <!-- 7 -->
-  <h2 id="s7">七、檔案結構（F:\Ten）</h2>
+  <!-- 6 -->
+  <h2 id="s6">六、檔案結構（F:\Ten）</h2>
   <div class="card">
     <table class="files">
       <tbody>
@@ -233,8 +214,8 @@
     </table>
   </div>
 
-  <!-- 8 -->
-  <h2 id="s8">八、操作方式</h2>
+  <!-- 7 -->
+  <h2 id="s7">七、操作方式</h2>
   <div class="card">
     <ol>
       <li><b>雙擊 <code>啟動查詢.bat</code></b> → 自動開啟瀏覽器至 <code>http://127.0.0.1:5000</code></li>
@@ -247,6 +228,7 @@
       <li><code>dry_run: false</code>　＝ 查詢並自動寫回 C 欄（正式，目前設定）</li>
     </ul>
   </div>
+
   <footer>
     新竹貨運貨態自動查詢與回填系統 ・ 作業流程報告 ・ 2026-06-30<br>
     本報告由本機程式之開發與實測過程整理而成。
